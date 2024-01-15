@@ -1,3 +1,0 @@
-/root/workspace_thh/build/CMakeFiles/audioWave.dir
-/root/workspace_thh/build/CMakeFiles/edit_cache.dir
-/root/workspace_thh/build/CMakeFiles/rebuild_cache.dir
