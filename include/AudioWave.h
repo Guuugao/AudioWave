@@ -1,8 +1,15 @@
 #pragma once
+#include <time.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
 #include <alsa/asoundlib.h>
+
+typedef enum {
+    IDLE = -1,  // 空闲
+    RECORD,     // 录制
+    PLAYBACK    // 播放
+}status_t;
 
 /**
  * @brief 根据给定参数进行音频录制
@@ -14,11 +21,11 @@
  * @param sample_rate   采样率(Hz) (e.g., 8000，44100, 96000).
  * @param bit_depth     位深 (e.g., 16, 24, 32).
  * @param channels      通道数 (e.g., 1 - 单声道, 2 - 双声道).
- * @param seconds       录制时长
+ * @param seconds       录制时长, 0表示等待用户手动结束
  */
-void record_audio(const char* filename, 
+void record_audio_RAW(const char* filename, 
         unsigned int sample_rate, unsigned short bit_depth, 
-        unsigned short channels, unsigned int duration);
+        unsigned short channels, time_t duration);
 
 /**
  * @brief 播放音频文件
@@ -27,25 +34,6 @@ void record_audio(const char* filename,
  *
  * @param filename 输入文件名称
  */
-void play_audio(const char* filename);
-
-/**
- * @brief 转换参数
- *
- * 转换用户输入的位深为alsa库枚举
- *
- * @param bit_depth     用户输入的位深
- */
-snd_pcm_format_t get_alsa_format(short bit_depth);
-
-/**
- * @brief 判断机器字节序
- *
- * 该函数用于检查系统的字节序。 
- * 在小端字节序中，最小有效字节（LSB）存储在最小的内存地址，最大有效字节（MSB）存储在最大的内存地址。 
- * 在大端字节序中，顺序则相反。
- *
- * @param bit_depth     用户输入的位深
- * @return 如果是小端字节序则返回1，否则返回0
- */
-int is_small_endian();
+void play_audio_RAW(const char* filename, 
+        unsigned int sample_rate, unsigned short bit_depth, 
+        unsigned short channels);
