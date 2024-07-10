@@ -5,12 +5,6 @@
 #include <string.h>
 #include <alsa/asoundlib.h>
 
-typedef enum {
-    IDLE = -1,  // 空闲
-    RECORD,     // 录制
-    PLAYBACK    // 播放
-}status_t;
-
 /**
  * @brief 根据给定参数进行音频录制
  *
@@ -37,3 +31,13 @@ void record_audio_RAW(const char* filename,
 void play_audio_RAW(const char* filename, 
         unsigned int sample_rate, unsigned short bit_depth, 
         unsigned short channels);
+
+/**
+ * @brief 中止播放或录制
+ *
+ * 当程序录制时，将停止录制，释放资源，保存文件
+ * 程序播放时，将停止播放，释放资源
+ *
+ * @param sig   接收的信号，此处为 SIGINT(Ctrl + C)
+ */
+void handle_SIGINT(int sig);

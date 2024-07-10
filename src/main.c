@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include "AudioWave.h"
+
+#define EXIT_OK 0
+#define EXIT_ERROR 1
 
 int main(int argc, char**argv){
     int play = 0;
@@ -11,7 +15,16 @@ int main(int argc, char**argv){
     int bit_depth = 16;         // 默认位深
     int channels = 2;           // 默认声道数
     time_t duration = -1;       // 录制时长, -1代表等待用户手动停止
+    struct sigaction sig_act_SIGINT = { 0 }; // SIGINT信号的处理行为和一些设置
 
+    /* 绑定信号和处理函数 */
+    sig_act_SIGINT.sa_handler = handle_SIGINT;
+    if(-1 == sigaction(SIGINT, &sig_act_SIGINT, NULL)) {
+        fprintf(stderr, "fail to set SIGINT handler\n");
+        return EXIT_ERROR;
+    }
+
+    /* 读取用户指定的参数 */
     for(int i = 1; i < argc; ++i) {
         // 打印帮助信息
         if (strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--play") == 0) {
@@ -23,35 +36,35 @@ int main(int argc, char**argv){
                 sample_rate = atoi(argv[++i]);
             } else {
                 fprintf(stderr, "Error: Missing sample rate after %s\n", argv[i]);
-                return 1;
+                return EXIT_ERROR;
             }
         } else if (strcmp(argv[i], "-b") == 0 || strcmp(argv[i], "--bitdepth") == 0) {
             if (i + 1 < argc) {
                 bit_depth = atoi(argv[++i]);
             } else {
                 fprintf(stderr, "Error: Missing bit depth after %s\n", argv[i]);
-                return 1;
+                return EXIT_ERROR;
             }
         } else if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--channels") == 0) {
             if (i + 1 < argc) {
                 channels = atoi(argv[++i]);
             } else {
                 fprintf(stderr, "Error: Missing channels after %s\n", argv[i]);
-                return 1;
+                return EXIT_ERROR;
             }
         } else if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--duration") == 0){
             if (i + 1 < argc) {
                 duration = atoi(argv[++i]);
             } else {
                 fprintf(stderr, "Error: Missing filename after %s\n", argv[i]);
-                return 1;
+                return EXIT_ERROR;
             }
         } else if (strcmp(argv[i], "-f") == 0 || strcmp(argv[i], "--file") == 0){
             if (i + 1 < argc) {
                 filename = argv[++i];
             } else {
                 fprintf(stderr, "Error: Missing filename after %s\n", argv[i]);
-                return 1;
+                return EXIT_ERROR;
             }
         } else if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             printf("welcome to use %s:)\n", _PROJECT_NAME);
@@ -71,34 +84,35 @@ int main(int argc, char**argv){
             printf("    %s --record --file output.wav --samplerate 44100 --bitdepth 16 --channels 2\n", _PROJECT_NAME);
             printf("\n  Play audio from a file:\n");
             printf("    %s --play --file output.wav\n", _PROJECT_NAME);
-            return 0;
+            return EXIT_OK;
         } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) {
             printf("%s\t%s\n", _PROJECT_NAME, _PROJECT_VERSION);
-            return 0;
+            return EXIT_OK;
         } else {
             printf("unknown option: %s\n", argv[i]);
             printf("Usage: %s [-r, --record] [-s, --samplerate <rate>] [-b, --bitdepth <depth>] [-c, --channels <num>] \n", _PROJECT_NAME);
             printf("\t\t[-p, --play] [-f, --file <filename>] [-h, --help] [-v, --version] \n");
-            return 0;
+            return EXIT_OK;
         }
     }
 
+    /* 执行录制或者播放 */
     if (record) { // 录制
         if (!filename) {
             fprintf(stderr, "Error: No filename specified for recording\n");
-            return 1;
+            return EXIT_ERROR;
         }
         record_audio_RAW(filename, sample_rate, bit_depth, channels, duration);
     } else if (play) { // 播放
         if (!filename) {
             fprintf(stderr, "Error: No filename specified for playback\n");
-            return 1;
+            return EXIT_ERROR;
         }
         play_audio_RAW(filename, sample_rate, bit_depth, channels);
     } else {
         fprintf(stderr, "Error: No action specified (use --record or --play)\n");
-        return 1;
+        return EXIT_ERROR;
     }
 
-    return 0;
+    return EXIT_OK;
 }
